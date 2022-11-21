@@ -64,12 +64,20 @@ export namespace CommonDataTypes {
   });
   export type RemoteReference = zod.infer<typeof RemoteReferenceSchema>;
 
+  // BindingValue = {
+  //   type: "binding",
+  //   value: text,
+  // }
+  export const BindingValueSchema = zod.object({
+    type: zod.literal('binding'),
+    value: zod.string(),
+  });
+
   // UndefinedValue = {
   //   type: "undefined",
   // }
   const UndefinedValueSchema = zod.object({type: zod.literal('undefined')});
 
-  //
   // NullValue = {
   //   type: "null",
   // }
@@ -93,7 +101,6 @@ export namespace CommonDataTypes {
     '-Infinity',
   ]);
 
-  //
   // NumberValue = {
   //   type: "number",
   //   value: number / SpecialNumber,
@@ -512,7 +519,6 @@ export namespace Script {
     realm: zod.string().min(1),
   });
 
-  //
   // Target = (
   //   RealmTarget //
   //   ContextTarget
@@ -575,6 +581,7 @@ export namespace Script {
     CommonDataTypes.RemoteReferenceSchema,
     CommonDataTypes.SharedReferenceSchema,
     CommonDataTypes.LocalValueSchema,
+    CommonDataTypes.BindingValueSchema,
   ]);
   export type ArgumentValue = zod.infer<typeof ArgumentValueSchema>;
 
@@ -706,7 +713,6 @@ export namespace BrowsingContext {
   };
 
   // BrowsingContextCreateType = "tab" / "window"
-  //
   // BrowsingContextCreateParameters = {
   //   type: BrowsingContextCreateType
   // }
