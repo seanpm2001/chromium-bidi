@@ -19,7 +19,7 @@
     "strictFunctionTypes": true,
     "strictNullChecks": true,
     "strictPropertyInitialization": true,
-    "target": "ESNext",
+    "target": "ES2016",
     "useUnknownInCatchVariables": true,
     "declaration": true,
     "composite": true
