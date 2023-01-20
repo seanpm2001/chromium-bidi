@@ -11,6 +11,9 @@ on:
 jobs:
   wpt:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        head: [wpt, wpt-headful]
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -42,20 +45,26 @@ jobs:
           sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
           sudo apt-get update
           sudo apt-get install -y google-chrome-unstable
-      - name: Run tests
+      - name: Run tests (headless)
+        if: ${{ matrix.head == "wpt" }}
         # For verbose logging, add --log-mach - --log-mach-level info
         run: ./wpt run --webdriver-binary ../runBiDiServer.sh --binary /usr/bin/google-chrome-unstable --manifest MANIFEST.json --metadata ../wpt-metadata --log-wptreport wptreport.json chromium webdriver/tests/bidi/
         working-directory: wpt
+      - name: Run tests (headful)
+        if: ${{ matrix.head == "wpt-headful" }}
+        # For verbose logging, add --log-mach - --log-mach-level info
+        run: xvfb-run --auto-servernum ./wpt run --webdriver-binary ../runBiDiServer.sh --webdriver-arg="--headless=false" --binary /usr/bin/google-chrome-unstable --manifest MANIFEST.json --metadata ../wpt-headful-metadata --log-wptreport wptreport.json chromium webdriver/tests/bidi/
+        working-directory: wpt
       - name: Update expectations
         if: ${{ always() }}
-        run: ./wpt update-expectations --product chromium --manifest MANIFEST.json --metadata ../wpt-metadata wptreport.json
+        run: ./wpt update-expectations --product chromium --manifest MANIFEST.json --metadata ../${{ matrix.head }}-metadata wptreport.json
         working-directory: wpt
       - name: Upload expectations
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          name: wpt-metadata
-          path: wpt-metadata
+          name: ${{ matrix.head }}-metadata
+          path: ${{ matrix.head }}-metadata
       - name: Upload logs
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -64,5 +73,6 @@ jobs:
           # Note: runBiDiServer.sh will be run multiple times and log.txt will be
           # overwritten. The problem might not be in the log.txt written last.
           path: logs
+
 env:
   FORCE_COLOR: 3
