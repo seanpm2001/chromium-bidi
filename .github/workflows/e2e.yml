@@ -10,20 +10,21 @@ on:
 jobs:
   e2e:
     timeout-minutes: 15
-    runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest]
         headful-argument: [headful, headless]
-
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install chrome-dev
-        run: |
-          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
-          sudo sh -c 'echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google.list'
-          sudo apt-get update
-          sudo apt-get install -y google-chrome-unstable
+      - name: Install Google Chrome Dev/Unstable
+        id: chrome
+        uses: abhi1693/setup-browser@v0.3.5
+        with:
+          browser: chrome
+          version: dev
       - name: Set up node.js
         uses: actions/setup-node@v3
         with:
@@ -34,12 +35,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: 3.9
+          python-version: '3.10'
           cache: 'pip'
       - name: Install Python dependencies
         run: pip install -r tests/requirements.txt
       - name: Run e2e tests
-        run: CHANNEL=chrome-dev xvfb-run --auto-servernum npm run e2e-${{ matrix.headful-argument }}
+        if: runner.os == 'Linux'
+        run: PUPPETEER_EXECUTABLE_PATH="$(which google-chrome-unstable)" xvfb-run --auto-servernum npm run e2e-${{ matrix.headful-argument }}
+      - name: Run e2e tests
+        if: runner.os == 'macOS'
+        run: PUPPETEER_EXECUTABLE_PATH="${{ steps.chrome.outputs.path }}/${{ steps.chrome.outputs.binary }}" npm run e2e-${{ matrix.headful-argument }}
 
 env:
   FORCE_COLOR: 3
