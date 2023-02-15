@@ -24,6 +24,14 @@ import {LogManager} from '../log/logManager.js';
 import {Protocol} from 'devtools-protocol';
 import {Realm} from '../script/realm.js';
 import {RealmStorage} from '../script/realmStorage.js';
+// import debug from 'debug';
+
+// const log = debug('browsingContextImpl');
+
+// DO NOT SUBMIT: Temporary logging.
+function log(...messages: unknown[]) {
+  console.error(...messages);
+}
 
 export class BrowsingContextImpl {
   readonly #targetDefers = {
@@ -200,7 +208,8 @@ export class BrowsingContextImpl {
 
   #updateConnection(cdpClient: CdpClient, cdpSessionId: string) {
     if (!this.#targetDefers.targetUnblocked.isFinished) {
-      this.#targetDefers.targetUnblocked.reject('OOPiF');
+      this.#targetDefers.targetUnblocked = new Deferred<void>();
+      log('OOPiF');
     }
     this.#targetDefers.targetUnblocked = new Deferred<void>();
 
@@ -441,28 +450,36 @@ export class BrowsingContextImpl {
     }
 
     if (!this.#targetDefers.documentInitialized.isFinished) {
-      this.#targetDefers.documentInitialized.reject('Document changed');
+      this.#targetDefers.documentInitialized.catch((error: unknown) => {
+        log('Document changed', error);
+      });
     }
     this.#targetDefers.documentInitialized = new Deferred<void>();
 
     if (!this.#targetDefers.Page.navigatedWithinDocument.isFinished) {
-      this.#targetDefers.Page.navigatedWithinDocument.reject(
-        'Document changed'
+      this.#targetDefers.Page.navigatedWithinDocument.catch(
+        (error: unknown) => {
+          log('Document changed', error);
+        }
       );
     }
     this.#targetDefers.Page.navigatedWithinDocument =
       new Deferred<Protocol.Page.NavigatedWithinDocumentEvent>();
 
     if (!this.#targetDefers.Page.lifecycleEvent.DOMContentLoaded.isFinished) {
-      this.#targetDefers.Page.lifecycleEvent.DOMContentLoaded.reject(
-        'Document changed'
+      this.#targetDefers.Page.lifecycleEvent.DOMContentLoaded.catch(
+        (error: unknown) => {
+          log('Document changed', error);
+        }
       );
     }
     this.#targetDefers.Page.lifecycleEvent.DOMContentLoaded =
       new Deferred<Protocol.Page.LifecycleEventEvent>();
 
     if (!this.#targetDefers.Page.lifecycleEvent.load.isFinished) {
-      this.#targetDefers.Page.lifecycleEvent.load.reject('Document changed');
+      this.#targetDefers.Page.lifecycleEvent.load.catch((error: unknown) => {
+        log('Document changed', error);
+      });
     }
     this.#targetDefers.Page.lifecycleEvent.load =
       new Deferred<Protocol.Page.LifecycleEventEvent>();
